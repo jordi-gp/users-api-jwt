@@ -1,57 +1,29 @@
 import { connection } from "../Database/dbConfig.js";
-import crypto from "crypto";
-
-const generateUUID = `SELECT UUID() AS uuid`;
-
-const getAll = `SELECT *, BIN_TO_UUID(id) FROM usersdb.users`;
-
-const create = `
-    INSERT INTO usersdb.users (
-        id,
-        name,
-        lastname,
-        username,
-        email,
-        password,
-        salt
-    ) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?);
-`;
-
-const findOneByUsername = `
-    SELECT * FROM usersdb.users
-    WHERE username = ?;
-`;
-
-const findOneByEmail = `
-    SELECT * FROM usersdb.users
-    WHERE email = ?;
-`;
-
-function hashPassword(password) {
-    const salt = crypto.randomBytes(16).toString("hex");
-    const hash = crypto
-        .pbkdf2Sync(password, salt, 1000, 64, "sha512")
-        .toString("hex");
-
-    return { salt, hash };
-}
+import bcrypt from "bcrypt";
+import {
+    create,
+    generateUUID,
+    getAll,
+    findOneByEmail,
+    findOneByUsername
+} from "../Database/querys.js";
 
 export default class UserModel {
     static async getAll() {
         try {
             const [users] = await connection.query(getAll);
             return users;
-        } catch(e) {
-            throw new Error('Error al obtener los usuarios');
+        } catch (e) {
+            throw new Error("Error al obtener los usuarios");
         }
     }
-    
+
     static async create({ input }) {
         const { name, lastname, username, email, password } = input;
 
         const [uuidResult] = await connection.query(generateUUID);
         const [{ uuid }] = uuidResult;
-        const { salt, hash } = hashPassword(password);
+        const hashedPassword = bcrypt.hashSync(password, 10);
 
         try {
             const result = await connection.query(create, [
@@ -60,13 +32,11 @@ export default class UserModel {
                 lastname,
                 username,
                 email,
-                hash,
-                salt,
+                hashedPassword,
             ]);
 
             return result;
         } catch (e) {
-            console.error(e.message);
             throw new Error("Error al registrar el usuario");
         }
     }
@@ -75,19 +45,34 @@ export default class UserModel {
 
     static async register() {}
 
-    static async update() {}
+    static async update({ userToUpdate, input }) {
+        const keys = Object.keys(input);
+
+        const setClause = keys.map((key) => `${key} = ?`).join(",");
+        const values = Object.values(input);
+
+        const query = `UPDATE users SET ${setClause} WHERE username = ?`;
+
+        try {
+            const [result] = await connection.query(query, [
+                ...values,
+                userToUpdate,
+            ]);
+            return [result];
+        } catch (e) {
+            throw new Error(e.message);
+        }
+    }
 
     static async logout() {}
 
     static async findOneByUsername({ username }) {
         const user = await connection.query(findOneByUsername, [username]);
-
         return user[0];
     }
 
     static async findOneByEmail({ email }) {
         const result = await connection.query(findOneByEmail, [email]);
-
         return result[0];
     }
 }

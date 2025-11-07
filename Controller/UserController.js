@@ -1,4 +1,5 @@
 import { validateUser, validatePartialUser } from "../Schemas/users.js";
+import bcrypt from "bcrypt";
 
 export class UserController {
     constructor({ userModel }) {
@@ -17,13 +18,12 @@ export class UserController {
         const userEmailResult = await this.userModel.findOneByEmail({ email });
 
         if(userEmailResult.length >= 1) {
-                throw new Error('Correo ya registrado');
+            throw new Error('Correo ya registrado');
         }
     }
 
     getAll = async(req, res) => {
         const result = await this.userModel.getAll();
-        console.log(result);
         res.json(result);
     }
 
@@ -52,14 +52,47 @@ export class UserController {
 
     update = async(req, res) => {
         const result = validatePartialUser(req.body);
+        const { userToUpdate } = req.params;
 
+        //#region VALIDACIONES
         if(result.error) {
             return res
                 .status(400)
-                .json({ error: JSON.parse(result.error.message) });
+                .json({ error: "Error al actualizar al usuario" });
         }
-        console.log(req.body);
-        res.send('UPDATE');
+
+        if(result.data.username !== undefined) {
+            try {
+                await this.#checkUsername(result.data.username);
+            } catch(e) {
+                return res.status(400).json({error: e.message});
+            }
+        }
+
+        if(result.data.email !== undefined) {
+            try {
+                await this.#checkEmail(result.data.email);
+            } catch(e) {
+                return res.status(500).json({error: e.message});
+            }
+        }
+
+        if(result.data.password !== undefined) {
+            const hashedPassword = bcrypt.hashSync(result.data.password, 10);
+            result.data.password = hashedPassword;
+        }
+        //#endregion
+
+        try {
+            await this.userModel.update({
+                userToUpdate,
+                input: result.data
+            });
+
+            return res.status(201).send({ message: "Usuario actualizado con éxito!" })
+        } catch(e) {
+            return res.status(500).send({ error: "Error al actualizar el usuario!" });
+        }
     };
     
     login = async(req, res) => {
