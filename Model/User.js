@@ -5,7 +5,7 @@ import {
     generateUUID,
     getAll,
     findOneByEmail,
-    findOneByUsername
+    findOneByUsername,
 } from "../Database/querys.js";
 
 export default class UserModel {
@@ -23,7 +23,7 @@ export default class UserModel {
 
         const [uuidResult] = await connection.query(generateUUID);
         const [{ uuid }] = uuidResult;
-        const hashedPassword = bcrypt.hashSync(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         try {
             const result = await connection.query(create, [
@@ -67,12 +67,20 @@ export default class UserModel {
     static async logout() {}
 
     static async findOneByUsername({ username }) {
-        const user = await connection.query(findOneByUsername, [username]);
-        return user[0];
+        try {
+            const user = await connection.query(findOneByUsername, [username]);
+            return user[0];
+        } catch (e) {
+            throw new Error("Usuario no encontrado");
+        }
     }
 
     static async findOneByEmail({ email }) {
-        const result = await connection.query(findOneByEmail, [email]);
-        return result[0];
+        try {
+            const result = await connection.query(findOneByEmail, [email]);
+            return result[0];
+        } catch(e) {
+            throw new Error("Correo no encontrado");
+        }
     }
 }
