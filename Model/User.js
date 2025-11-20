@@ -71,7 +71,7 @@ export default class UserModel {
             const user = await connection.query(findOneByUsername, [username]);
             return user[0];
         } catch (e) {
-            throw new Error("Usuario no encontrado");
+            throw new Error("Error al encontrar el usuario");
         }
     }
 

@@ -6,6 +6,7 @@ export function createUserRouter({ userModel }) {
     const userController = new UserController({ userModel })
 
     userRouter.get("/", userController.getAll);
+    userRouter.post("/:username", userController.getOneByUsername);
     userRouter.post("/create", userController.create);
     userRouter.post("/update/:userToUpdate", userController.update);
     userRouter.post("/login", userController.login);

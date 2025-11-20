@@ -7,25 +7,52 @@ export class UserController {
     }
 
     async #checkUsername(username) {
-        const userResult = await this.userModel.findOneByUsername({ username });
+        try {
+            const userResult = await this.userModel.findOneByUsername({ username });
 
-        if (userResult.length >= 1) {
-            throw new Error("Usuario ya registrado");
+            if (userResult.length >= 1) {
+                throw new Error("Usuario ya registrado");
+            }
+        } catch(e) {
+            return res.status(500).json({ error: e.message });
         }
     }
 
     async #checkEmail(email) {
-        const userEmailResult = await this.userModel.findOneByEmail({ email });
+        try {
+            const userEmailResult = await this.userModel.findOneByEmail({ email });
 
-        if (userEmailResult.length >= 1) {
-            throw new Error("Correo ya registrado");
+            if (userEmailResult.length >= 1) {
+                throw new Error("Correo ya registrado");
+            }
+        } catch(e) {
+            return res.status(500).json({ error: e.message });
         }
     }
 
     getAll = async (req, res) => {
-        const result = await this.userModel.getAll();
-        res.json(result);
+        try {
+            const result = await this.userModel.getAll();
+            res.json(result);
+        } catch(e) {
+            return res.status(500).json({ error: e.message });
+        }
     };
+
+    getOneByUsername = async (req, res) => {
+        try {
+            const username = req.params;
+            const result = await this.userModel.findOneByUsername(username);
+
+            if(result.length <= 0) {
+                return res.status(404).json({message: "Usuario no encontrado"});
+            }
+
+            res.json(result);
+        } catch(e) {
+            return res.status(500).json({ error: e.message });
+        }
+    }
 
     create = async (req, res) => {
         const result = validateUser(req.body);
@@ -118,7 +145,7 @@ export class UserController {
 
             if(!isValid) throw new Error("Contraseña incorrecta, vuelva a intentarlo");
 
-            res.send("LOGIN");
+                res.status(201).json({ user: usernameResult });
         } catch (e) {
             return res.status(500).json({ error: e.message });
         }
