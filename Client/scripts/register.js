@@ -1,7 +1,6 @@
 window.onload = main;
 
 function main() {
-    console.log('CARGADO');
     sendRegisterForm();
 }
 
@@ -25,8 +24,6 @@ function sendRegisterForm() {
             password,
             email,
         });
-
-        console.log(body);
 
         fetch('http://localhost:3000/users/register', {
             method: 'POST',

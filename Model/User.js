@@ -25,8 +25,6 @@ export default class UserModel {
         const [{ uuid }] = uuidResult;
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        console.log(input);
-
         try {
             const result = await connection.query(create, [
                 uuid,
@@ -36,7 +34,6 @@ export default class UserModel {
                 email,
                 hashedPassword,
             ]);
-            console.log(result);
 
             return result;
         } catch (e) {
