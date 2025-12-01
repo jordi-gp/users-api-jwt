@@ -15,6 +15,10 @@ app.get('/', (req, res) => {
     res.render('login.ejs');
 });
 
+app.get('/protected', (req, res) => {
+    res.render('protected.ejs');
+})
+
 app.get('/register', (req, res) => {
     res.render('register.ejs');
 });

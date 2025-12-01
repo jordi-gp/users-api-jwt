@@ -25,6 +25,8 @@ export default class UserModel {
         const [{ uuid }] = uuidResult;
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        console.log(input);
+
         try {
             const result = await connection.query(create, [
                 uuid,
@@ -34,6 +36,7 @@ export default class UserModel {
                 email,
                 hashedPassword,
             ]);
+            console.log(result);
 
             return result;
         } catch (e) {
@@ -41,7 +44,8 @@ export default class UserModel {
         }
     }
 
-    static async login() {}
+    static async login() {
+    }
 
     static async register() {}
 
@@ -66,7 +70,7 @@ export default class UserModel {
 
     static async logout() {}
 
-    static async findOneByUsername({ username }) {
+    static async findOneByUsername(username) {
         try {
             const user = await connection.query(findOneByUsername, [username]);
             return user[0];

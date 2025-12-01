@@ -31,17 +31,14 @@ const userSchema = z.object({
             invalid_type_error: "Formato de correo incorrecto",
             required_error: requiredErrMsg,
         })
-        .min(12, {
-            error: "El correo ha de contener almenos 12 caracteres"
-        })
-        .max(25, {
-            error: "El correo no puede contener mas de 25 caracteres"
+        .min(3, {
+            error: "El correo ha de contener almenos 3 caracteres"
         }),
     password: z.string({
             invalid_type_error: invalidString,
             required_error: requiredErrMsg,
         })
-        .min(10, {
+        .min(3, {
             error: "La contraseña ha de contener almenos 10 caracteres",
         }),
     created_at: z.date().optional()
