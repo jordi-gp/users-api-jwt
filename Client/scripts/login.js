@@ -1,3 +1,5 @@
+import { showAlert, hideAlert } from "./alerts.js";
+
 window.onload = main;
 
 function main() {
@@ -23,12 +25,17 @@ function sendLoginForm() {
             body: body
         }).then(async res => {
             if(res.ok) {
+                showAlert('success', 'Iniciando sessión...');
+
                 setTimeout(() => {
+                    hideAlert();
                     window.location.href = '/protected';
-                }, 5000);
+                }, 2500);
             } else {
-                const { error } = await res.json();
-                alert(error);
+                showAlert('danger', 'Error al iniciar sessión, vuelve a intentar-lo');
+                setTimeout(() => {
+                    hideAlert();
+                }, 5000);
             }
         }).catch(() => {
             console.error('Error al realizar la petición al servidor');

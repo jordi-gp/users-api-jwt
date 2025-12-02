@@ -139,7 +139,7 @@ export class UserController {
         const {username, password} = req.body;
 
         try {
-             const usernameResult = await this.userModel.findOneByUsername(username);
+            const usernameResult = await this.userModel.findOneByUsername(username);
 
             if (usernameResult.length <= 0) throw new Error("Credenciales incorrectas, reviselas");
 
