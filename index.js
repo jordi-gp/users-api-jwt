@@ -2,7 +2,7 @@ import express from 'express';
 import UserModel from './Model/User.js';
 import {createUserRouter} from './Router/UserRouter.js';
 import jwt from 'jsonwebtoken';
-import cookieParser from "cookie-parser";
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
