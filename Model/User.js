@@ -65,8 +65,6 @@ export default class UserModel {
         }
     }
 
-    static async logout() {}
-
     static async findOneByUsername(username) {
         try {
             const user = await connection.query(findOneByUsername, [username]);

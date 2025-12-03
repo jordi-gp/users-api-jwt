@@ -1,5 +1,6 @@
 import {validateUser, validatePartialUser} from "../Schemas/users.js";
 import bcrypt from "bcrypt";
+import jwt from 'jsonwebtoken';
 
 export class UserController {
     constructor({userModel}) {
@@ -76,8 +77,22 @@ export class UserController {
 
         try {
             await this.userModel.create({input: result.data});
+
+            const [ newUser ] = await this.userModel.findOneByUsername(result.data.username);
+
+            const token = jwt.sign({
+                _id: newUser._id,
+                username: newUser.username,
+                email: newUser.email
+            }, process.env.JWT_SECRET, {
+                expiresIn: '1d'
+            });
+
             return res
                 .status(201)
+                .cookie('access_token', token, {
+                    httpOnly: true,
+                })
                 .json({message: "Usuario registrado con éxito"});
         } catch (e) {
             return res
@@ -150,14 +165,25 @@ export class UserController {
 
             if (!isValid) throw new Error("Contraseña incorrecta, vuelva a intentarlo");
 
-            res.status(201).json({username: usernameResult[0].username});
+            const usernameVal = usernameResult[0].username;
+            const idVal = usernameResult[0]._id;
+            const emailVal = usernameResult[0].email;
+
+            const token = jwt.sign({
+                _id: idVal,
+                username: usernameVal,
+                email: emailVal
+            }, process.env.JWT_SECRET, {
+                expiresIn: '1d',
+            });
+
+            res.status(201)
+                .cookie('access_token', token, {
+                    httpOnly: true,
+                })
+                .json(usernameVal, token);
         } catch (e) {
             return res.status(500).json({error: e.message});
         }
-    };
-
-    logout = async (req, res) => {
-        //TODO: Destruir la sesión/cookies y cerrar la sesión
-        res.send("LOGOUT");
     };
 }

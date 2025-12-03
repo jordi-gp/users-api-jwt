@@ -1,6 +1,8 @@
 import express from 'express';
 import UserModel from './Model/User.js';
 import {createUserRouter} from './Router/UserRouter.js';
+import jwt from 'jsonwebtoken';
+import cookieParser from "cookie-parser";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -8,22 +10,44 @@ const PORT = process.env.PORT ?? 3000;
 app.set('view engine', 'ejs');
 app.set('views', './Client/views');
 
+//#region MIDDLEWARES
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static('Client'));
+
+app.use((req, res, next) => {
+    const token = req.cookies['access_token'];
+    req.session = {user: null};
+
+    try {
+        const data = jwt.verify(token, process.env.JWT_SECRET);
+        req.session.user = data;
+    } catch (e) {}
+
+    next();
+});
+//#endregion
 
 app.get('/', (req, res) => {
     res.render('login.ejs');
 });
 
 app.get('/protected', (req, res) => {
-    res.render('protected.ejs');
-})
+    const {user} = req.session;
+    if (!user) return res.status(403).send('Not authenticated!');
+    res.render('protected.ejs', {user});
+});
 
 app.get('/register', (req, res) => {
     res.render('register.ejs');
 });
 
 app.use('/users', createUserRouter({userModel: UserModel}));
+
+app.get('/logout', (req, res) => {
+    res.clearCookie('access_token');
+    res.redirect('/');
+});
 
 app.use((req, res) => {
     return res.status(404).render('not-found.ejs');
